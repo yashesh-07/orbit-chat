@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  # 🗄️ Database Layer
+  # Service name must match the host name "postgres_db" from your DATABASE_URL
+  postgres_db:
+    image: postgres:15-alpine
+    container_name: orbitchat_postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: OrbitSecurePass2026
+      POSTGRES_DB: orbitchat_db
+    ports:
+      - "${POSTGRES_PORT}:5432"  # Maps 5432 out to your custom host port
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - orbit_network
+
+  # ⚡ Cache & Presence Layer
+  # Service name must match the host name "redis_cache" from your REDIS_URL
+  redis_cache:
+    image: redis:7-alpine
+    container_name: orbitchat_redis
+    ports:
+      - "${REDIS_PORT}:6379"     # Maps 6379 out to your custom host port
+    networks:
+      - orbit_network
+
+  # 🚀 Real-Time Gateway Layer
+  web:
+    build: .
+    container_name: orbitchat_gateway
+    ports:
+      - "${FASTAPI_PORT}:8000"   # Maps 8000 out to your custom host port
+    volumes:
+      - .:/workspace
+    environment:
+      # Inject variables straight from your existing .env into the container RAM
+      - DATABASE_URL=${DATABASE_URL}
+      - REDIS_URL=${REDIS_URL}
+      - SECRET_KEY=${SECRET_KEY}
+      - ACCESS_TOKEN_EXPIRE_MINUTES=${ACCESS_TOKEN_EXPIRE_MINUTES}
+    depends_on:
+      - postgres_db
+      - redis_cache
+    networks:
+      - orbit_network
+
+volumes:
+  postgres_data:
+
+networks:
+  orbit_network:
+    driver: bridge

@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OrbitChat Control Matrix</title>
+    <style>
+        :root {
+            --bg-primary: #1e1f22;
+            --bg-secondary: #2b2d31;
+            --bg-tertiary: #313338;
+            --text-normal: #dbdee1;
+            --text-muted: #949ba4;
+            --brand: #5865f2;
+            --success: #23a55a;
+            --danger: #da373c;
+        }
+
+        * {
+            box-shadow: none;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: #111;
+            margin: 0;
+            padding: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: var(--text-normal);
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 1200px;
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            height: calc(100vh - 20px);
+        }
+
+        /* Sidebar styling */
+        .sidebar {
+            background: var(--bg-secondary);
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            border-right: 1px solid #202225;
+            overflow-y: auto;
+        }
+
+        .sidebar h2 {
+            margin: 0;
+            font-size: 18px;
+            color: white;
+            border-bottom: 1px solid #3f4147;
+            padding-bottom: 10px;
+        }
+
+        .config-card {
+            background: var(--bg-primary);
+            padding: 12px;
+            border-radius: 6px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .config-card h3 {
+            margin: 0 0 4px 0;
+            font-size: 11px;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            letter-spacing: 0.5px;
+        }
+
+        input {
+            width: 100%;
+            padding: 8px 10px;
+            border-radius: 4px;
+            border: 1px solid #111;
+            background: var(--bg-primary);
+            color: white;
+            font-size: 13px;
+        }
+
+        input:focus {
+            border-color: var(--brand);
+            outline: none;
+        }
+
+        button {
+            width: 100%;
+            padding: 8px;
+            border-radius: 4px;
+            border: none;
+            font-weight: bold;
+            font-size: 13px;
+            cursor: pointer;
+            transition: background 0.2s, opacity 0.2s;
+        }
+
+        .btn-brand {
+            background: var(--brand);
+            color: white;
+        }
+
+        .btn-brand:hover {
+            background: #4752c4;
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-success:hover {
+            opacity: 0.9;
+        }
+
+        /* Active Panels List */
+        .roster-list {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            max-height: 220px;
+        }
+
+        .roster-item {
+            padding: 8px 10px;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+            background: transparent;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .roster-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+        }
+
+        .roster-item.active {
+            background: #404249;
+            color: white;
+            font-weight: bold;
+        }
+
+        .badge-type {
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 8px;
+            background: var(--bg-primary);
+            color: var(--text-muted);
+        }
+
+        /* Chat Viewport layout */
+        .chat-viewport {
+            display: flex;
+            flex-direction: column;
+            background: var(--bg-tertiary);
+            height: 100%;
+        }
+
+        .chat-header {
+            background: var(--bg-secondary);
+            padding: 15px 20px;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chat-header h3 {
+            margin: 0;
+            font-size: 16px;
+            color: white;
+        }
+
+        .status-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #ff4757;
+            margin-right: 6px;
+        }
+
+        .status-online {
+            background: var(--success) !important;
+        }
+
+        /* Messages window */
+        .messages-window {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .msg-row {
+            display: flex;
+            flex-direction: column;
+            max-width: 75%;
+            width: fit-content;
+        }
+
+        .msg-row.me {
+            align-self: flex-end;
+            align-items: flex-end;
+        }
+
+        .msg-row.them {
+            align-self: flex-start;
+            align-items: flex-start;
+        }
+
+        .msg-sender {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-bottom: 2px;
+        }
+
+        .msg-bubble {
+            padding: 10px 14px;
+            border-radius: 16px;
+            font-size: 14px;
+            line-height: 1.4;
+            word-break: break-word;
+        }
+
+        .me .msg-bubble {
+            background: var(--brand);
+            color: white;
+            border-bottom-right-radius: 2px;
+        }
+
+        .them .msg-bubble {
+            background: var(--bg-secondary);
+            color: var(--text-normal);
+            border-bottom-left-radius: 2px;
+        }
+
+        .msg-seq {
+            font-size: 9px;
+            opacity: 0.5;
+            margin-top: 2px;
+            display: block;
+        }
+
+        /* Footer Send bar */
+        .chat-footer {
+            padding: 15px 20px;
+            background: var(--bg-tertiary);
+        }
+
+        .input-wrapper {
+            display: flex;
+            background: #383a40;
+            border-radius: 6px;
+            padding: 5px 10px;
+            align-items: center;
+        }
+
+        .input-wrapper input {
+            background: transparent;
+            border: none;
+            padding: 10px;
+            font-size: 14px;
+            color: white;
+        }
+
+        .input-wrapper button {
+            width: auto;
+            padding: 8px 20px;
+            background: var(--brand);
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="app-container">
+
+        <div class="sidebar">
+            <h2>OrbitChat Dashboard</h2>
+
+            <div class="config-card">
+                <h3>1. Identity Verification</h3>
+                <input type="text" id="usernameInput" placeholder="Username (e.g., alice)" value="alice">
+                <div style="display: flex; gap: 4px;">
+                    <button class="btn-brand" onclick="apiAuth('register')" style="flex: 1;">Register</button>
+                    <button class="btn-success" onclick="apiAuth('login')" style="flex: 1;">Log In</button>
+                </div>
+            </div>
+
+            <div class="config-card">
+                <h3>2. Create New Channel</h3>
+                <input type="text" id="createChannelNameInput" placeholder="Channel Name (e.g., general)"
+                    value="announcements">
+                <button class="btn-brand" onclick="apiCreateChannel()">POST /channels/create</button>
+            </div>
+
+            <div class="config-card">
+                <h3>3. Join Existing Channel</h3>
+                <input type="text" id="joinChannelIdInput" placeholder="Target Channel ID (e.g., 1)">
+                <button class="btn-success" onclick="apiJoinChannel()">POST /channels/{id}/join</button>
+            </div>
+
+            <div class="config-card" style="flex: 1; display: flex; flex-direction: column;">
+                <h3>Active Target Panels</h3>
+                <div class="roster-list" id="activeRosterTabs"></div>
+            </div>
+        </div>
+
+        <div class="chat-viewport">
+            <div class="chat-header">
+                <h3 id="viewportHeaderTitle">Authenticate via Sidebar Matrix</h3>
+                <div style="font-size: 12px; display: flex; align-items: center; color: var(--text-muted);">
+                    <span class="status-dot" id="networkStatusDot"></span>
+                    <span id="networkStatusText">OFFLINE</span>
+                </div>
+            </div>
+
+            <div class="messages-window" id="messagesWindow"></div>
+
+            <div class="chat-footer">
+                <div class="input-wrapper">
+                    <input type="text" id="messageInput" placeholder="Send frame message..."
+                        onkeypress="if(event.key === 'Enter') sendSocketFrame()">
+                    <button onclick="sendSocketFrame()">Send</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let state = {
+            token: null,
+            userId: null,
+            username: null,
+            activeRoomId: null,
+            rooms: {},       // Schema: { id: { name: "", type: "GROUP", socket: WebSocket } }
+            history: {}      // Schema: { id: [messages] }
+        };
+
+        const HTTP_HOST = "http://localhost:8000";
+        const WS_HOST = "ws://localhost:8000";
+
+        // 🔐 AUTH ENGINE CALLS
+        async function apiAuth(route) {
+            const username = document.getElementById('usernameInput').value.trim();
+            if (!username) return alert("Target context username cannot be empty.");
+
+            try {
+                const res = await fetch(`${HTTP_HOST}/v1/auth/${route}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, email: `${username}@orbit.com`, password: "SecurePassword123" })
+                });
+                if (!res.ok) throw new Error(await res.text());
+
+                if (route === 'login') {
+                    const data = await res.json();
+                    state.token = data.access_token;
+                    state.username = username;
+
+                    // Parse JWT sub claim to identify current running context
+                    const claims = JSON.parse(atob(state.token.split('.')[1]));
+                    state.userId = parseInt(claims.sub);
+
+                    alert(`Authenticated context: ${username.toUpperCase()} (User ID: ${state.userId})`);
+                    document.getElementById('viewportHeaderTitle').innerText = "Context loaded. Run your route requests.";
+                } else {
+                    alert(`Account registration completed for "${username}". Proceed to Log In.`);
+                }
+            } catch (e) {
+                alert(`Auth Trace Error: ${e.message}`);
+            }
+        }
+
+        // 📣 ROUTE CALL 1: Create a Group Channel Workspace
+        async function apiCreateChannel() {
+            if (!state.token) return alert("Authorization payload required. Log in first.");
+            const name = document.getElementById('createChannelNameInput').value.trim();
+            if (!name) return alert("Specify channel string name.");
+
+            try {
+                const res = await fetch(`${HTTP_HOST}/v1/chat/channels/create?name=${encodeURIComponent(name)}`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${state.token}` }
+                });
+                if (!res.ok) throw new Error(await res.text());
+                const data = await res.json();
+
+                // Maps explicitly to your backend model key: data.channel_id
+                const roomId = data.channel_id;
+                alert(`Backend Channel Allocated! Channel ID assigned: ${roomId}`);
+
+                trackAndConnectRoom(roomId, `📣 ${data.name} (#${roomId})`, "GROUP");
+            } catch (e) {
+                alert(`Channel Creation Fault: ${e.message}`);
+            }
+        }
+
+        // 👥 ROUTE CALL 2: Join Existing Channel via Path Parameters
+        async function apiJoinChannel() {
+            if (!state.token) return alert("Authorization payload required. Log in first.");
+            const channelId = parseInt(document.getElementById('joinChannelIdInput').value.trim());
+            if (isNaN(channelId)) return alert("Enter an integer ID target.");
+
+            try {
+                // FIXED: Addresses path constraint format: /v1/chat/channels/{channel_id}/join
+                const res = await fetch(`${HTTP_HOST}/v1/chat/channels/${channelId}/join`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${state.token}` }
+                });
+                if (!res.ok) throw new Error(await res.text());
+
+                alert(`Access Granted! Registered to Channel #${channelId}`);
+
+                // Render panel tab and spawn active socket consumer stream
+                trackAndConnectRoom(channelId, `📣 Channel Room (#${channelId})`, "GROUP");
+            } catch (e) {
+                alert(`Roster Entry Rejection: ${e.message}`);
+            }
+        }
+
+        // 🛠️ ACTIVE STATE CONFIGURATOR
+        function trackAndConnectRoom(id, displayName, type) {
+            if (!state.rooms[id]) {
+                state.rooms[id] = { id, name: displayName, type, socket: null };
+                state.history[id] = [];
+            }
+
+            mountWebSocketPipe(id);
+            activateRoomViewport(id);
+            renderSidebarTabs();
+        }
+
+        // ⚡ WEBSOCKET PIPELINE STREAM CONNECTOR
+        function mountWebSocketPipe(roomId) {
+            const room = state.rooms[roomId];
+            if (room.socket) return;
+
+            // Route map: @router.websocket("/ws/{channel_id}") passed via query token
+            const socketUrl = `${WS_HOST}/v1/chat/ws/${roomId}?token=${state.token}`;
+            const ws = new WebSocket(socketUrl);
+
+            ws.onopen = () => { if (state.activeRoomId === roomId) updateNetworkStatusUI(true); };
+            ws.onclose = () => { if (state.activeRoomId === roomId) updateNetworkStatusUI(false); };
+
+            ws.onmessage = (event) => {
+                const frame = JSON.parse(event.data);
+                state.history[roomId].push(frame);
+                if (state.activeRoomId === roomId) {
+                    appendMessageBubble(frame);
+                }
+            };
+
+            room.socket = ws;
+        }
+
+        // 🚀 DISPATCH MESSAGE TO SOCKET
+        function sendSocketFrame() {
+            const input = document.getElementById('messageInput');
+            const text = input.value.trim();
+            if (!text || !state.activeRoomId) return;
+
+            const room = state.rooms[state.activeRoomId];
+            if (!room || !room.socket || room.socket.readyState !== WebSocket.OPEN) {
+                return alert("Dispatch Aborted: Pipeline socket is dead or unauthenticated.");
+            }
+
+            // Sends simple raw frame structure inside string tracking wrapper
+            room.socket.send(JSON.stringify({ text: text }));
+            input.value = '';
+        }
+
+        // 🎨 UI VIEWPORT INSERTS
+        function activateRoomViewport(roomId) {
+            state.activeRoomId = roomId;
+            const room = state.rooms[roomId];
+
+            document.getElementById('viewportHeaderTitle').innerText = room.name;
+
+            const isOpen = room.socket && room.socket.readyState === WebSocket.OPEN;
+            updateNetworkStatusUI(isOpen);
+
+            const windowDiv = document.getElementById('messagesWindow');
+            windowDiv.innerHTML = '';
+            state.history[roomId].forEach(frame => appendMessageBubble(frame));
+
+            renderSidebarTabs();
+        }
+
+        function updateNetworkStatusUI(online) {
+            const dot = document.getElementById('networkStatusDot');
+            const txt = document.getElementById('networkStatusText');
+            if (online) {
+                dot.className = "status-dot status-online";
+                txt.innerText = "STREAM ONLINE";
+                txt.style.color = "var(--success)";
+            } else {
+                dot.className = "status-dot";
+                txt.innerText = "CONNECTING...";
+                txt.style.color = "var(--text-muted)";
+            }
+        }
+
+        function renderSidebarTabs() {
+            const container = document.getElementById('activeRosterTabs');
+            container.innerHTML = '';
+
+            Object.values(state.rooms).forEach(room => {
+                const div = document.createElement('div');
+                div.className = `roster-item ${state.activeRoomId === room.id ? 'active' : ''}`;
+                div.onclick = () => activateRoomViewport(room.id);
+                div.innerHTML = `
+                <span>${room.name.length > 24 ? room.name.substring(0, 22) + '...' : room.name}</span>
+                <span class="badge-type">${room.type}</span>
+            `;
+                container.appendChild(div);
+            });
+        }
+
+        function appendMessageBubble(frame) {
+            const windowDiv = document.getElementById('messagesWindow');
+            const isMe = frame.sender_id === state.userId;
+
+            const row = document.createElement('div');
+            row.className = `msg-row ${isMe ? 'me' : 'them'}`;
+            row.innerHTML = `
+            <span class="msg-sender">${isMe ? 'You' : 'User #' + frame.sender_id}</span>
+            <div class="msg-bubble">
+                ${escapeMarkup(frame.text)}
+                <span class="msg-seq">Seq Timeline ID: #${frame.sequence_id}</span>
+            </div>
+        `;
+            windowDiv.appendChild(row);
+            windowDiv.scrollTop = windowDiv.scrollHeight;
+        }
+
+        function escapeMarkup(str) {
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        }
+    </script>
+
+</body>
+
+</html>
